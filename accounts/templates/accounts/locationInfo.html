@@ -1,0 +1,103 @@
+{% extends 'accounts/main.html' %}
+{% block content %}
+<section style="background-color: #eee;">
+    <div class="container py-5">
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="card mb-4">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Location</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">{{ location.name }}</p>
+                </div>
+              </div>
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Assigned</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">{{ location.person }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card mb-4 mb-md-0">
+                <div class="card-body">
+                  {% if inventory %}
+
+                  <table class="table table-sm table-responsive" style="font-size: 0.8rem;">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th scope="col">Item</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Per Piece</th>
+                        <th scope="col">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% for each in inventory.data %}
+                      <tr >
+                        <td>{{each.name}}</td>
+                        <td>{{each.quan}}</td>
+                        <td>{{each.per}}rs</td>
+                        <td>{{each.totP}}rs</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+
+                <table class="table table-sm table-responsive" style="font-size: 0.8rem;">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th scope="col">Total Price</th>
+                        <th scope="col"></th>
+                        <th scope="col"></th>
+                        <th scope="col">{{inventory.total_price}}rs</th>
+                      </tr>
+                    </thead>
+                </table>
+                
+                {% endif %}
+
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card mb-4 mb-md-0">
+                <div class="card-body">
+                  <p class="mb-4"><span class="text-primary font-italic me-1"></span> Statements
+                  </p>
+                  <table class="table" style="font-size: 0.8rem;">
+                    <thead class="thead">
+                      <tr>
+                        <th scope="col">Creator</th>
+                        <th scope="col">To</th>
+                        <th scope="col">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% for each in statements %}
+                        <tr class="{{each.status}}" onclick="window.location='/statement/{{each.id}}';" style="cursor:pointer;">
+                          <td>{{each.creator}}</td>
+                          <td>{{each.to}}</td>
+                          <td>{{each.price}}rs</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+                
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endblock %}

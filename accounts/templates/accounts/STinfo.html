@@ -1,0 +1,53 @@
+{% extends 'accounts/main.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4">Statement Information</h1>
+
+    <div class="card mb-4 bg-info text-dark">
+      <div class="card-header">
+        <h3 class="card-title">Details</h3>
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+          <li class="list-group-item"><strong>From:</strong> {{ statement.from }}</li>
+          <li class="list-group-item"><strong>To:</strong> {{ statement.to}}</li>
+          <li class="list-group-item"><strong>Created by:</strong> {{ statement.creator }}</li>
+          <li class="list-group-item"><strong>Status:</strong> {{ statement.status }}</li>
+          <li class="list-group-item"><strong>Created at:</strong> {{ statement.created_at }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card bg-light">
+      <div class="card-header">
+        <h3 class="card-title">Items</h3>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+            {% for item_quantity in statement.itemList %}
+              <tr>
+                <td>{{ item_quantity.item.name }}</td>
+                <td>{{ item_quantity.quantity }}</td>
+                <td>{{ item_quantity.price }}rs</td>
+              </tr>
+            {% endfor %}
+            <tr class="table-primary">
+              <td colspan="2" class="text-right"><strong>Total Price:</strong></td>
+              <td>{{ statement.price }}rs</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
