@@ -7,6 +7,7 @@ from .decorators import *
 from .models import *
 
 
+
 # Create your views here.
 @login_required(login_url="login")
 @user_made_statement
@@ -19,15 +20,13 @@ def showST(request, STcode):
 @login_required(login_url="login")
 def userInfoEmp(request):
     user = User.objects.get(id=request.user.id)
-    f_name = user.person.first_name
-    l_name = user.person.last_name
+    full_name = user.person.full_name
     phone = user.person.number
     inventory_data = user.person.inventory_for_assigned_location()
     location = user.person.get_assigned_location_name()
     statments = user.person.get_statement()
-    print(inventory_data)
     context = {
-        "name": f"{f_name} {l_name}",
+        "name": full_name,
         "phone": phone,
         "location": location,
         "inventory": inventory_data,
@@ -39,15 +38,34 @@ def userInfoEmp(request):
 def userInfoOwn(request, userId): 
     pass
 
+def addEach(lstOpt, persons):
+    for each in persons:
+        lstOpt.append((each.id, each))
+    return lstOpt
+
+
 @login_required(login_url="login")
 @user_assigned_location
 def locationInfo(request, location_id):
     location = Location.objects.get(id=location_id)
     inventory_data = location.get_inevn_data()
     statments = location.get_statement()
+    unassigned_persons = Person.objects.filter(location__isnull = True)
+    options = []
+    if location.person:
+        options.append((location.person.id, location.person))
+        options = addEach(options, unassigned_persons)
+        options.append((-1, 'None'))
+    else:
+        options.append((-1, 'None'))
+        options = addEach(options, unassigned_persons)
+    
     context = {'location': location,
                'inventory': inventory_data,
-               'statements': statments}
+               'statements': statments,
+               'unassigned': options,
+               'size': len(options)}
+    
     return render(request, 'accounts/locationInfo.html', context)
 
 
@@ -89,3 +107,60 @@ def home(request):
 def logoutUser(request):
     logout(request)
     return redirect("login")
+
+
+def update_assigned(request):
+    if request.method == 'POST':
+        if request.user.person.is_owner:
+            selected_person = request.POST.get('selected_person')
+            location_id = request.POST.get('location_id')
+
+            try:
+                loc = Location.objects.get(id=location_id)
+                per = None
+                print(type(selected_person))
+                if selected_person != '-1':
+                    per = Person.objects.get(id=selected_person)
+                loc.person = per
+                loc.save()
+                messages.success(request, 'Location assigned updated successfully.')
+            except:
+
+                messages.error(request, 'Invalid Try Again')
+        else:
+            messages.error(request, 'Permission denied. You are not allowed to make changes.')
+    return redirect('locationInfo', location_id=location_id)
+
+def update_location(request):
+    if request.method == 'POST':
+        if request.user.person.is_owner:
+            new_location_name = request.POST.get('new_location_name')
+            location_id = request.POST.get('location_id')
+            
+            try:
+                loc = Location.objects.get(id=location_id)
+                loc.name = new_location_name
+                loc.save()
+                messages.success(request, 'Location name updated successfully.')
+            except:
+                messages.error(request, 'Invalid Try Again')
+        else:
+            messages.error(request, 'Permission denied. You are not allowed to make changes.')
+    return redirect('locationInfo', location_id=location_id)
+
+
+def update_FullName(request):
+    if request.method == 'POST':
+        per_id = request.POST.get('user_id')
+        if request.user.person.is_owner or request.user.person.id == per_id:
+            try:
+                per = Person.objects.get(id=per_id)
+                new_name = request.POST.get('new_Name')
+                per.full_name = new_name
+                per.save()
+                messages.success(request, 'Full Name updated successfully.')
+            except:
+                messages.error(request, 'Invalid Try Again')
+        else:
+            messages.error(request, 'Permission denied. You are not allowed to make changes.')       
+    return redirect('userInfo')

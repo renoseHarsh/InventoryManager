@@ -1,0 +1,12 @@
+{% extends 'accounts/editBut.html' %}
+{% block ida %}locName{% endblock %}
+{% block idb %}locName{% endblock %}
+
+{% block title %}Location Name{% endblock %}
+{% block form_action %}{% url 'update_location' %}{% endblock %}
+
+{% block input_field %}
+        <input type="hidden" name="location_id" value="{{ location.id }}">
+        <input type="text" name="new_location_name" id="new_location_name" required placeholder="{{ location.name }}">
+{% endblock %}
+

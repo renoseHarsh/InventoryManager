@@ -1,0 +1,11 @@
+{% extends 'accounts/editBut.html' %}
+{% block ida %}FullName{% endblock %}
+{% block idb %}FullName{% endblock %}
+
+{% block title %}Update Full Name{% endblock %}
+{% block form_action %}{% url 'update_FullName' %}{% endblock %}
+
+{% block input_field %}
+<input type="hidden" name="user_id" value="{{ request.user.person.id }}">
+<input type="text" name="new_Name" required placeholder="{{ request.user.person.full_name }}">
+{% endblock %}

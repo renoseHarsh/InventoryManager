@@ -1,0 +1,16 @@
+{% extends 'accounts/editBut.html' %}
+
+{% block ida %}AssignedTo{% endblock %}
+{% block idb %}AssignedTo{% endblock %}
+{% block title %}Edit Assigned Location{% endblock %}
+
+{% block form_action %}{% url 'update_assigned' %}{% endblock %}
+
+{% block input_field %}
+<input type="hidden" name="location_id" value="{{ location.id }}">
+<select class="form-select" name="selected_person">
+    {% for each in unassigned %}
+      <option value="{{ each.0 }}" {% if each.0 == unassigned.0.0 %}selected{% endif %}>{{ each.1 }}</option>
+    {% endfor %}
+  </select>
+{% endblock %}

@@ -7,9 +7,7 @@ from django.contrib.auth.models import User
 
 class Person(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    username = models.CharField(max_length=50, null=True, blank=True)
-    first_name = models.CharField(max_length=50, null=True, blank=True)
-    last_name = models.CharField(max_length=50, null=True, blank=True)
+    full_name = models.CharField(max_length=50, null=True, blank=True)
     number = models.CharField(max_length=15, null=True, blank=True)
     is_owner = models.BooleanField(default=False)
 
@@ -47,7 +45,7 @@ class Person(models.Model):
             return None
 
     def __str__(self):
-        return self.username
+        return str(self.user)
 
 
 class Location(models.Model):

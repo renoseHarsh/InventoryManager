@@ -6,7 +6,7 @@ from .models import *
 @receiver(post_save, sender=User)
 def create_person_profile(sender, instance, created, *args, **kwargs):
     if created:
-        Person.objects.create(user=instance, username=instance.username)
+        Person.objects.create(user=instance)
 
 
 @receiver(post_save, sender=Location)
