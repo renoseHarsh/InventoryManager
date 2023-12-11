@@ -62,7 +62,7 @@ class Location(models.Model):
                 "name": each.item.name,
                 "quan": each.quantity,
                 "per": each.item.price,
-                "totP": each.quantity * each.item.price,
+                "totP": each.price,
             }
             lst.append(data)
             total += data["totP"]
@@ -102,6 +102,10 @@ class Inventory(models.Model):
 
     def __str__(self):
         return f"{self.location} - {self.item} - {self.quantity}"
+    
+    @property
+    def price(self):
+        return self.quantity * self.item.price
 
 
 class Store(models.Model):

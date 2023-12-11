@@ -4,84 +4,143 @@ from .models import *
 
 class ModelTestCases(TestCase):
     def setUp(self):
-        pass
+        self.test_user = User.objects.create(username = 'testUser', password='testPassword')
+        self.test_item = Item.objects.create(name= 'testItem', price = 10)
+        self.test_location = Location.objects.create(name = 'testLocation', person = self.test_user.person)
+        self.test_inventory = Inventory.objects.get(location=self.test_location, item=self.test_item)
+        self.test_inventory.quantity = 5
+        self.test_inventory.save()
+        self.test_store = Store.objects.create(name='testStore', location = self.test_location)
+        self.test_storeStatement = StoreStatement.objects.create(creator = self.test_user.person,
+                                                            warehouse = self.test_location,
+                                                            customer = self.test_store,
+                                                            )
+        self.test_itemQuantity = ItemQuantity.objects.create(statement = self.test_storeStatement,
+                                                        item = self.test_item,
+                                                        )
 
 
     def test_user_and_person_creation(self):
-        test_user = User.objects.create(username = 'testUser', password='testPassword')
-        person = test_user.person
+        person = self.test_user.person
 
         self.assertIsInstance(person, Person)
-        self.assertEqual(person.user, test_user)
+        self.assertEqual(person.user, self.test_user)
         self.assertEqual(person.full_name, None)
         self.assertEqual(person.number, None)
         self.assertFalse(person.is_owner)
 
-    def test_inventory_creation_on_location_creation(self):
-        test_item = Item.objects.create(name= 'testItem', price = 10)
-        test_location = Location.objects.create(name = 'testLocation')
-        inventory = Inventory.objects.get(location = test_location, item=test_item)
 
-        self.assertEqual(inventory.location, test_location)
-        self.assertEqual(inventory.item, test_item)
-        self.assertEqual(inventory.quantity, 0)
 
     def test_inventory_creation_on_item_creation(self):
-        test_location = Location.objects.create(name = 'testLocation')
-        test_item = Item.objects.create(name= 'testItem', price = 10)
-        inventory = Inventory.objects.get(location = test_location, item=test_item)
+        new_test_item = Item.objects.create(name= 'testItem', price = 10)
+        inventory = Inventory.objects.get(location = self.test_location, item=new_test_item)
 
-        self.assertEqual(inventory.location, test_location)
-        self.assertEqual(inventory.item, test_item)
+        self.assertEqual(inventory.location, self.test_location)
+        self.assertEqual(inventory.item, new_test_item)
         self.assertEqual(inventory.quantity, 0)
 
 
-    def test_statement_information_retrieval(self):
-        test_user = User.objects.create(username='testUser', password='testPassword')
-        test_location = Location.objects.create(name='testLocation', person=test_user.person)
-        self.assertEqual(test_user.person, test_location.person)
+    def test_location_person_and_user_association(self):
+        self.assertEqual(self.test_location.person ,self.test_user.person)
 
-        test_item = Item.objects.create(name='testItem', price=10)
-        test_inventory = Inventory.objects.get(location=test_location, item=test_item)
-        test_inventory.quantity = 5
-        test_inventory.save()
 
-        test_store = Store.objects.create(name='testStore', location = test_location)
-        self.assertEqual(test_location, test_store.location)
+    def test_store_and_location_association(self):
+        self.assertEqual(self.test_store.location, self.test_location)
 
-        test_storeStatement = StoreStatement.objects.create(creator = test_user.person,
-                                                            warehouse = test_location,
-                                                            customer = test_store,
-                                                            )
-        
-        self.assertEqual(test_storeStatement.creator, test_user.person)
-        self.assertEqual(test_storeStatement.warehouse, test_location)
-        self.assertEqual(test_storeStatement.customer, test_store)
-        self.assertEqual(test_storeStatement.status, 'Pending')
+
+    def test_store_statement_creation_attributes(self):
+        self.assertEqual(self.test_storeStatement.creator, self.test_user.person)
+        self.assertEqual(self.test_storeStatement.warehouse, self.test_location)
+        self.assertEqual(self.test_storeStatement.customer, self.test_store)
+        self.assertEqual(self.test_storeStatement.status, 'Pending')
 
 
 
-        test_itemQuantity = ItemQuantity.objects.create(statement = test_storeStatement,
-                                                        item = test_item,
-                                                        )
 
-        self.assertEqual(test_itemQuantity.statement, test_storeStatement)
-        self.assertEqual(test_itemQuantity.item, test_item)
-        self.assertEqual(test_itemQuantity.quantity, 0)
+    def test_item_quantity_attributes(self):
+        self.assertEqual(self.test_itemQuantity.statement, self.test_storeStatement)
+        self.assertEqual(self.test_itemQuantity.item, self.test_item)
+        self.assertEqual(self.test_itemQuantity.quantity, 0)
 
-        statement_info = test_storeStatement.get_ST_Info()
 
-        self.assertEqual(statement_info['from'], test_location)
-        self.assertEqual(statement_info['to'], test_store)
-        self.assertEqual(statement_info['creator'], test_user.person)
+    def test_StoreStatement_get_ST_Info(self):
+        statement_info = self.test_storeStatement.get_ST_Info()
+
+        self.assertEqual(statement_info['from'], self.test_location)
+        self.assertEqual(statement_info['to'], self.test_store)
+        self.assertEqual(statement_info['creator'], self.test_user.person)
         self.assertEqual(statement_info['status'], 'Pending')
-        self.assertEqual(statement_info['itemList'][0], test_itemQuantity)
+        self.assertEqual(statement_info['itemList'][0], self.test_itemQuantity)
+        self.assertEqual(statement_info['id'], self.test_storeStatement.id)
 
-        price = sum(each.price for each in test_storeStatement.itemquantity_set.all())
+        price = sum(each.price for each in self.test_storeStatement.itemquantity_set.all())
 
         self.assertEqual(statement_info['price'], price)
 
 
+    def test_Person_get_statement(self):
+        data = self.test_user.person.get_statement()
+
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['status'], 'bg-info')
 
 
+    def test_Person_has_location(self):
+        self.assertTrue(self.test_user.person.has_location())
+        self.test_location.person = None
+        self.test_location.save()
+        self.assertFalse(self.test_user.person.has_location())
 
+
+    def test_Person_get_assigned_location_name(self):
+        self.assertEqual(self.test_user.person.get_assigned_location_name(), self.test_location)
+        self.test_user.person.location = None
+        self.test_location.save()
+        self.assertIsNone(self.test_user.person.get_assigned_location_name())
+
+
+    def test_Person_inventory_for_assigned_location(self):
+        self.assertEqual(self.test_user.person.inventory_for_assigned_location(),
+                         self.test_location.get_inevn_data())
+
+        self.test_user.person.location = None
+        self.test_location.save()
+        self.assertIsNone(self.test_user.person.inventory_for_assigned_location())
+
+    def test_Location_creation(self):
+        self.assertEqual(self.test_location.name, 'testLocation')
+        self.assertEqual(self.test_location.person, self.test_user.person)
+
+    def test_inventory_creation_on_location_creation(self):
+        new_test_location = Location.objects.create(name = 'testNewLoc')
+        inventory = Inventory.objects.get(location = new_test_location, item=self.test_item)
+
+        self.assertEqual(inventory.location, new_test_location)
+        self.assertEqual(inventory.item, self.test_item)
+        self.assertEqual(inventory.quantity, 0)
+
+    def test_Location_get_inevn_data(self):
+        data = self.test_location.get_inevn_data()
+        self.assertEqual(len(data['data']), 1)
+
+        new_item = Item.objects.create(name='newItem', price=2)
+        new_invent = Inventory.objects.get(item=new_item, location=self.test_location)
+        new_invent.quantity = 3
+        new_invent.save()
+        data = self.test_location.get_inevn_data()
+
+        self.assertEqual(len(data['data']), 2)
+        self.assertEqual(data['data'][0]['name'], self.test_item.name)
+        self.assertEqual(data['data'][0]['quan'], self.test_inventory.quantity)
+        self.assertEqual(data['data'][0]['per'], self.test_item.price)
+        self.assertEqual(data['data'][0]['totP'], self.test_inventory.price)
+
+        self.assertEqual(data['total_price'], self.test_inventory.price + new_invent.price)
+
+    def test_Location_get_statement(self):
+        data = self.test_location.get_statement()
+
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['status'], 'bg-info')
+
+    
