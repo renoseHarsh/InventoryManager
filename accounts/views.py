@@ -17,26 +17,42 @@ def showST(request, STcode):
     return render(request, "accounts/STinfo.html", context)
 
 
-@login_required(login_url="login")
-def userInfoEmp(request):
-    user = User.objects.get(id=request.user.id)
+def getInfo(user):
     full_name = user.person.full_name
     phone = user.person.number
     inventory_data = user.person.inventory_for_assigned_location()
     location = user.person.get_assigned_location_name()
     statments = user.person.get_statement()
+
     context = {
+        "id": user.person.id,
         "name": full_name,
         "phone": phone,
         "location": location,
         "inventory": inventory_data,
         "statements": statments,
+        "username": user.username,
     }
+    return context
+
+
+@login_required(login_url="login")
+def userInfoEmp(request):
+    user = User.objects.get(id=request.user.id)
+    context = getInfo(user)
     return render(request, "accounts/userInfo.html", context)
 
+@owner_required
+def userInfoOwn(request, person_id):
+    try:
+        user = User.objects.get(person__id=person_id)
+    except:
+        return render(request, 'accounts/my404.html')
+    context = getInfo(user)                                                                   #7 kamesh
+                                                                                              # 8 darshana
+    context['owner_view'] = True
 
-def userInfoOwn(request, userId): 
-    pass
+    return render(request, "accounts/userInfoEmp.html", context)
 
 def addEach(lstOpt, persons):
     for each in persons:
@@ -118,7 +134,6 @@ def update_assigned(request):
             try:
                 loc = Location.objects.get(id=location_id)
                 per = None
-                print(type(selected_person))
                 if selected_person != '-1':
                     per = Person.objects.get(id=selected_person)
                 loc.person = per
@@ -149,18 +164,36 @@ def update_location(request):
     return redirect('locationInfo', location_id=location_id)
 
 
-def update_FullName(request):
+def handle_user_update(request, new_entry_id, new_entry_type, user_id = None):
     if request.method == 'POST':
-        per_id = request.POST.get('user_id')
+        per_id = user_id if user_id is not None else request.user.person.id
         if request.user.person.is_owner or request.user.person.id == per_id:
             try:
                 per = Person.objects.get(id=per_id)
-                new_name = request.POST.get('new_Name')
-                per.full_name = new_name
-                per.save()
+                new_entry = request.POST.get(new_entry_id)
+                nested_attributes = new_entry_type.split('.')
+                cur = per
+                for attr in nested_attributes[:-1]:
+                    cur = getattr(cur, attr, None)
+                
+                setattr(cur, nested_attributes[-1], new_entry)
+                cur.save()
                 messages.success(request, 'Full Name updated successfully.')
             except:
                 messages.error(request, 'Invalid Try Again')
         else:
-            messages.error(request, 'Permission denied. You are not allowed to make changes.')       
+            messages.error(request, 'Permission denied. You are not allowed to make changes.')
+    if user_id:
+        return redirect('userInfo', user_id)
     return redirect('userInfo')
+
+                
+                
+def update_FullName(request, user_id=None):
+    return handle_user_update(request, 'new_Name', 'full_name', user_id)
+
+def update_UserName(request, user_id=None):
+    return handle_user_update(request, 'new_UserName', 'user.username', user_id)
+
+def update_Number(request, user_id=None):
+    return handle_user_update(request, 'new_Number', 'number', user_id)

@@ -1,0 +1,17 @@
+{% extends 'accounts/editBut.html' %}
+{% block ida %}UserName{% endblock %}
+{% block idb %}UserName{% endblock %}
+
+{% block title %}Update UserName{% endblock %}
+
+{% block form_action %}
+    {% if owner_view %}
+        {% url 'update_UserName' user_id=id %}
+    {% else %}
+        {% url 'update_UserName' %}
+    {% endif %}
+{% endblock %}
+
+{% block input_field %}
+<input type="text" name="new_UserName" required placeholder="{{ username }}">
+{% endblock %}

@@ -3,9 +3,15 @@
 {% block idb %}FullName{% endblock %}
 
 {% block title %}Update Full Name{% endblock %}
-{% block form_action %}{% url 'update_FullName' %}{% endblock %}
+
+{% block form_action %}
+    {% if owner_view %}
+        {% url 'update_FullName' user_id=id %}
+    {% else %}
+        {% url 'update_FullName' %}
+    {% endif %}
+{% endblock %}
 
 {% block input_field %}
-<input type="hidden" name="user_id" value="{{ request.user.person.id }}">
-<input type="text" name="new_Name" required placeholder="{{ request.user.person.full_name }}">
+<input type="text" name="new_Name" required placeholder="{{ name }}">
 {% endblock %}

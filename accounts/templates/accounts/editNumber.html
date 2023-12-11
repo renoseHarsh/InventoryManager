@@ -1,0 +1,19 @@
+{% extends 'accounts/editBut.html' %}
+{% block ida %}Number{% endblock %}
+{% block idb %}Number{% endblock %}
+
+{% block title %}Update Phone{% endblock %}
+
+{% block form_action %}
+    {% if owner_view %}
+        {% url 'update_Number' user_id=id %}
+    {% else %}
+        {% url 'update_Number' %}
+    {% endif %}
+{% endblock %}
+
+{% block input_field %}
+<input type="text" name="new_Number" required placeholder="{{ phone }}">
+{% endblock %}
+
+
