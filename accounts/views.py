@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .decorators import *
 from .models import *
-
+from http import HTTPStatus
 
 
 # Create your views here.
@@ -42,12 +42,13 @@ def userInfoEmp(request):
     context = getInfo(user)
     return render(request, "accounts/userInfo.html", context)
 
+@login_required(login_url="login")
 @owner_required
 def userInfoOwn(request, person_id):
     try:
         user = User.objects.get(person__id=person_id)
     except:
-        return render(request, 'accounts/my404.html')
+        return render(request, 'accounts/my404.html', status=HTTPStatus.NOT_FOUND)
     context = getInfo(user)                                                                   #7 kamesh
                                                                                               # 8 darshana
     context['owner_view'] = True
@@ -90,6 +91,8 @@ def locationInfo(request, location_id):
 def registerPage(request):
     form = RegistrationForm()
     if request.method == "POST":
+        if not request.user.person.is_owner:
+            raise PermissionDenied("You are not allowed to make an user")
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
@@ -145,7 +148,9 @@ def update_assigned(request):
                 messages.error(request, 'Invalid Try Again')
         else:
             messages.error(request, 'Permission denied. You are not allowed to make changes.')
-    return redirect('locationInfo', location_id=location_id)
+        
+        return redirect('locationInfo', location_id=location_id)
+    return redirect('userInfo')
 
 def update_location(request):
     if request.method == 'POST':
@@ -162,7 +167,8 @@ def update_location(request):
                 messages.error(request, 'Invalid Try Again')
         else:
             messages.error(request, 'Permission denied. You are not allowed to make changes.')
-    return redirect('locationInfo', location_id=location_id)
+        return redirect('locationInfo', location_id=location_id)
+    return redirect('userInfo')
 
 
 def handle_user_update(request, new_entry_id, new_entry_type, user_id = None):

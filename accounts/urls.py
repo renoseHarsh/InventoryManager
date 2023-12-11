@@ -11,7 +11,9 @@ urlpatterns = [
     path('userInfo/', userInfoEmp, name='userInfo'),
     path('statement/<str:STcode>/', showST, name='showST'),
     path('location/<int:location_id>/', locationInfo, name='locationInfo'),
+
     path('update_location/', update_location, name='update_location'),
+    
     path('update_assigned/', update_assigned, name='update_assigned'),
 
     path('update_FullName/', update_FullName, name='update_FullName'),

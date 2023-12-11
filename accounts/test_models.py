@@ -4,13 +4,18 @@ from .models import *
 
 class ModelTestCases(TestCase):
     def setUp(self):
-        self.test_user = User.objects.create(username = 'testUser', password='testPassword')
-        self.test_item = Item.objects.create(name= 'testItem', price = 10)
-        self.test_location = Location.objects.create(name = 'testLocation', person = self.test_user.person)
-        self.test_inventory = Inventory.objects.get(location=self.test_location, item=self.test_item)
+        self.test_user = User.objects.create(username = 'testUser',
+                                             password='testPassword')
+        self.test_item = Item.objects.create(name= 'testItem',
+                                             price = 10)
+        self.test_location = Location.objects.create(name = 'testLocation',
+                                                     person = self.test_user.person)
+        self.test_inventory = Inventory.objects.get(location=self.test_location,
+                                                    item=self.test_item)
         self.test_inventory.quantity = 5
         self.test_inventory.save()
-        self.test_store = Store.objects.create(name='testStore', location = self.test_location)
+        self.test_store = Store.objects.create(name='testStore',
+                                               location = self.test_location)
         self.test_storeStatement = StoreStatement.objects.create(creator = self.test_user.person,
                                                             warehouse = self.test_location,
                                                             customer = self.test_store,
