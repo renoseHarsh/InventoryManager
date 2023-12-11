@@ -16,10 +16,7 @@ class AuthorizationTestCase(TestCase):
         self.own.person.is_owner = True
         self.own.person.save()
 
-    def test_login_page_unauthenticated(self):
-        response = self.client.get(reverse('register'))
-        self.assertRedirects(response,
-                             reverse('login')+f'?next={reverse("register")}')
+
         
 
     def test_home_page_unauthenticated(self):
@@ -38,7 +35,7 @@ class AuthorizationTestCase(TestCase):
     def test_home_page_unauthenticated_user(self):
         pass
 
-    # Register Page ('register)
+    # Register Page ('register')
     def test_register_page_unauthenticated(self):
         response = self.client.get(reverse('register'))
         self.assertRedirects(response,
@@ -54,6 +51,13 @@ class AuthorizationTestCase(TestCase):
         self.loginown()
         response = self.client.get(reverse('register'))
         self.assertEqual(response.status_code, 200)
+    
+    # Login Page ('login')
+    def test_login_page_unauthenticated(self):
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+        
+
 
     
 
