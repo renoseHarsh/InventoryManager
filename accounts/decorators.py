@@ -10,7 +10,6 @@ def unauthenticated_user(view_func):
             return redirect('home')
         else:
             return view_func(request, *args, **kwargs)
-        
     return wrapper_func
 
 def owner_required(view_func):

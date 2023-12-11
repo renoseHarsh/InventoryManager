@@ -19,7 +19,7 @@ class ModelTestCases(TestCase):
                                                         item = self.test_item,
                                                         )
 
-
+    # Person
     def test_user_and_person_creation(self):
         person = self.test_user.person
 
@@ -30,52 +30,8 @@ class ModelTestCases(TestCase):
         self.assertFalse(person.is_owner)
 
 
-
-    def test_inventory_creation_on_item_creation(self):
-        new_test_item = Item.objects.create(name= 'testItem', price = 10)
-        inventory = Inventory.objects.get(location = self.test_location, item=new_test_item)
-
-        self.assertEqual(inventory.location, self.test_location)
-        self.assertEqual(inventory.item, new_test_item)
-        self.assertEqual(inventory.quantity, 0)
-
-
     def test_location_person_and_user_association(self):
         self.assertEqual(self.test_location.person ,self.test_user.person)
-
-
-    def test_store_and_location_association(self):
-        self.assertEqual(self.test_store.location, self.test_location)
-
-
-    def test_store_statement_creation_attributes(self):
-        self.assertEqual(self.test_storeStatement.creator, self.test_user.person)
-        self.assertEqual(self.test_storeStatement.warehouse, self.test_location)
-        self.assertEqual(self.test_storeStatement.customer, self.test_store)
-        self.assertEqual(self.test_storeStatement.status, 'Pending')
-
-
-
-
-    def test_item_quantity_attributes(self):
-        self.assertEqual(self.test_itemQuantity.statement, self.test_storeStatement)
-        self.assertEqual(self.test_itemQuantity.item, self.test_item)
-        self.assertEqual(self.test_itemQuantity.quantity, 0)
-
-
-    def test_StoreStatement_get_ST_Info(self):
-        statement_info = self.test_storeStatement.get_ST_Info()
-
-        self.assertEqual(statement_info['from'], self.test_location)
-        self.assertEqual(statement_info['to'], self.test_store)
-        self.assertEqual(statement_info['creator'], self.test_user.person)
-        self.assertEqual(statement_info['status'], 'Pending')
-        self.assertEqual(statement_info['itemList'][0], self.test_itemQuantity)
-        self.assertEqual(statement_info['id'], self.test_storeStatement.id)
-
-        price = sum(each.price for each in self.test_storeStatement.itemquantity_set.all())
-
-        self.assertEqual(statement_info['price'], price)
 
 
     def test_Person_get_statement(self):
@@ -107,17 +63,10 @@ class ModelTestCases(TestCase):
         self.test_location.save()
         self.assertIsNone(self.test_user.person.inventory_for_assigned_location())
 
-    def test_Location_creation(self):
+    # Location
+    def test_Location_creation_attributes(self):
         self.assertEqual(self.test_location.name, 'testLocation')
         self.assertEqual(self.test_location.person, self.test_user.person)
-
-    def test_inventory_creation_on_location_creation(self):
-        new_test_location = Location.objects.create(name = 'testNewLoc')
-        inventory = Inventory.objects.get(location = new_test_location, item=self.test_item)
-
-        self.assertEqual(inventory.location, new_test_location)
-        self.assertEqual(inventory.item, self.test_item)
-        self.assertEqual(inventory.quantity, 0)
 
     def test_Location_get_inevn_data(self):
         data = self.test_location.get_inevn_data()
@@ -143,4 +92,118 @@ class ModelTestCases(TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['status'], 'bg-info')
 
+    def test_inventory_creation_on_location_creation(self):
+        new_test_location = Location.objects.create(name = 'testNewLoc')
+        inventory = Inventory.objects.get(location = new_test_location, item=self.test_item)
+
+        self.assertEqual(inventory.location, new_test_location)
+        self.assertEqual(inventory.item, self.test_item)
+        self.assertEqual(inventory.quantity, 0)
+
+
+
+    # Item
+    def test_Item_creation_attributes(self):
+        self.assertEqual(self.test_item.name, 'testItem')
+        self.assertEqual(self.test_item.price, 10)
+
+    def test_inventory_creation_on_item_creation(self):
+        new_test_item = Item.objects.create(name= 'testItem', price = 10)
+        inventory = Inventory.objects.get(location = self.test_location,
+                                          item=new_test_item)
+
+        self.assertEqual(inventory.location, self.test_location)
+        self.assertEqual(inventory.item, new_test_item)
+        self.assertEqual(inventory.quantity, 0)
     
+    # Inventory
+    def test_Inventory_creation_attributes(self):
+        self.assertEqual(self.test_inventory.location, self.test_location)
+        self.assertEqual(self.test_inventory.item, self.test_item)
+        self.assertEqual(self.test_inventory.quantity, 5)
+
+    
+    def test_Inventory_price(self):
+        self.assertEqual(self.test_inventory.price,
+                         self.test_inventory.quantity * self.test_item.price)
+        
+    def test_Inventory_deletion_on_Item_deletion(self):
+        new_test_item = Item.objects.create(name = 'toBeDetetedItem', price = 5)
+        inventory_to_delete = Inventory.objects.get(location=self.test_location,
+                                                    item = new_test_item)
+        
+        self.assertIsNotNone(inventory_to_delete)
+        new_test_item.delete()
+
+        new_inven = Inventory.objects.filter()
+
+        self.assertEqual(len(new_inven), 1)
+        self.assertEqual(new_inven[0], self.test_inventory)
+    
+    def test_Inventory_deletion_on_Location_deletion(self):
+        new_test_location = Location.objects.create(name = 'toBeDetetedLocation')
+        inventory_to_delete = Inventory.objects.get(location=new_test_location,
+                                                    item = self.test_item)
+        
+        self.assertIsNotNone(inventory_to_delete)
+        new_test_location.delete()
+
+        new_inven = Inventory.objects.filter()
+
+        self.assertEqual(len(new_inven), 1)
+        self.assertEqual(new_inven[0], self.test_inventory)
+
+    # Store
+    def test_Store_creation_attributes(self):
+        self.assertEqual(self.test_store.name, 'testStore')
+        self.assertEqual(self.test_store.location, self.test_location)
+
+
+
+    # StoreStatement
+    def test_StoreStatement_creation_attributes(self):
+        self.assertEqual(self.test_storeStatement.creator, self.test_user.person)
+        self.assertEqual(self.test_storeStatement.warehouse, self.test_location)
+        self.assertEqual(self.test_storeStatement.customer, self.test_store)
+        self.assertEqual(self.test_storeStatement.status, 'Pending')
+
+
+    def test_StoreStatement_get_ST_Info(self):
+        statement_info = self.test_storeStatement.get_ST_Info()
+
+        self.assertEqual(statement_info['from'], self.test_location)
+        self.assertEqual(statement_info['to'], self.test_store)
+        self.assertEqual(statement_info['creator'], self.test_user.person)
+        self.assertEqual(statement_info['status'], 'Pending')
+        self.assertEqual(statement_info['itemList'][0], self.test_itemQuantity)
+        self.assertEqual(statement_info['id'], self.test_storeStatement.id)
+
+        self.assertEqual(statement_info['price'], self.test_storeStatement.price)
+        
+        
+    def test_StoreStatement_price(self):
+        price = sum(each.price for each in self.test_storeStatement.itemquantity_set.all())
+        self.assertEqual(self.test_storeStatement.price, price)
+
+    # ItemQuantity
+    def test_ItemQuantity_attributes(self):
+        self.assertEqual(self.test_itemQuantity.statement, self.test_storeStatement)
+        self.assertEqual(self.test_itemQuantity.item, self.test_item)
+        self.assertEqual(self.test_itemQuantity.quantity, 0)
+
+    def test_ItemQuantity_price(self):
+        price = self.test_item.price * self.test_itemQuantity.quantity
+        self.assertEqual(self.test_itemQuantity.price, price)
+
+
+    def test_ItemQuantity_deletion_on_StoreStatement_deletion(self):
+        self.assertIsNotNone(self.test_itemQuantity)
+        self.test_storeStatement.delete()
+        with self.assertRaises(ItemQuantity.DoesNotExist):
+            ItemQuantity.objects.get(id=self.test_itemQuantity.id)
+
+    def test_ItemQuantity_deletion_on_Item_deletion(self):
+        self.assertIsNotNone(self.test_itemQuantity)
+        self.test_item.delete()
+        with self.assertRaises(ItemQuantity.DoesNotExist):
+            ItemQuantity.objects.get(id=self.test_itemQuantity.id)

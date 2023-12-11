@@ -85,6 +85,7 @@ def locationInfo(request, location_id):
     return render(request, 'accounts/locationInfo.html', context)
 
 
+@login_required(login_url="login")
 @owner_required
 def registerPage(request):
     form = RegistrationForm()

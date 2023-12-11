@@ -10,6 +10,7 @@ class Person(models.Model):
     full_name = models.CharField(max_length=50, null=True, blank=True)
     number = models.CharField(max_length=15, null=True, blank=True)
     is_owner = models.BooleanField(default=False)
+    
 
     def get_statement(self):
         raw_statements = StoreStatement.objects.filter(creator=self).order_by('-created_at')
@@ -53,6 +54,7 @@ class Location(models.Model):
     person = models.OneToOneField(
         Person, on_delete=models.SET_NULL, null=True, blank=True
     )
+    
     def get_inevn_data(self):
         ivent = Inventory.objects.filter(location=self)
         lst = []
@@ -99,6 +101,7 @@ class Inventory(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
+    
 
     def __str__(self):
         return f"{self.location} - {self.item} - {self.quantity}"
@@ -114,7 +117,7 @@ class Store(models.Model):
     phone = models.CharField(max_length=10, null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=True)
+    
 
     def __str__(self):
         return self.name
