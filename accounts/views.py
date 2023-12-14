@@ -87,8 +87,7 @@ def locationInfo(request, location_id):
                'unassigned': options,
                'restock': restock,
                'size': len(options),
-               'isAssigned': request.user.person.location 
-               == location}
+               'isAssigned': request.user.person.location == location}
     
     
     return render(request, 'accounts/locationInfo.html', context)
