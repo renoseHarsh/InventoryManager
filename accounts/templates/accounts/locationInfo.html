@@ -105,12 +105,78 @@
                   {% endfor %}
                 </tbody>
               </table>
-              {% if isAssigned or request.user.person.is_owner %}
-              {% include 'accounts/pstStoreStm.html' %}
-              {% endif %}
             </div>
           </div>
         </div>
+        {% if restock != None %}
+        <div class="col-md-5 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-4"><span class="text-primary font-italic me-1">Restock History</span>
+              </p>
+              <table class="table table-sm" style="font-size: 0.8rem;">
+                <thead class="thead">
+                  <tr>
+                    <th scope="col">Creator</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Created At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for each in restock %}
+                  <tr class="{{each.status}}" onclick="window.location='/statement/{{each.id}}';"
+                    style="cursor:pointer;">
+                    <td>{{each.creator}}</td>
+                    <td>{{each.price}}rs</td>
+                    <td>{{each.created_at}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+
+      <div class="row">
+        {% if isAssigned %}
+        <div class="col-md-2 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-4"><span class="text-primary font-italic me-1">Post Statment</span>
+              </p>
+              <form method="post" action="{% url 'create_storeStm' %}">
+                {% csrf_token %}
+                {% for each in inventory.data %}
+                {{each.name}}
+                <select class="form-select" name="{{each.name}}">
+                  <option selected value="0">0</option>
+                  {% for i in each.range %}
+                  <option value="{{i}}">{{i}}</option>
+                  {% endfor %}
+                </select>
+                <br>
+                {% endfor %}
+                Store: 
+                <select class="form-select" name="store_name">
+                  {% for store in stores %}
+                  <option value="{{store.id}}">{{store}}</option>
+                  {% endfor %}
+                </select>
+                <br>
+                <input type="hidden" name="location_id" value="{{ location.id }}">
+                
+                <button type="submit">Submit</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+
+
         {% if restock != None %}
         <div class="col-md-5 mb-4">
           <div class="card">

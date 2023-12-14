@@ -77,6 +77,10 @@ class Location(models.Model):
         Person, on_delete=models.SET_NULL, null=True, blank=True
     )
 
+    def get_quntity_of_item(self, item):
+        inven = Inventory.objects.get(location = self, item = item)
+        return inven.quantity
+
     def get_inevn_data(self):
         ivent = Inventory.objects.filter(location=self)
         lst = []
@@ -87,6 +91,7 @@ class Location(models.Model):
                 "quan": each.quantity,
                 "per": each.item.price,
                 "totP": each.price,
+                "range": range(1, each.quantity + 1)
             }
             lst.append(data)
             total += data["totP"]

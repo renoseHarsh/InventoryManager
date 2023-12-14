@@ -25,4 +25,8 @@ urlpatterns = [
     path('update_Number/', update_Number, name='update_Number'),
     path('update_Number/<str:user_id>/', update_Number, name='update_Number'),
 
+    path('create_storeStm', postStoreStatement, name='create_storeStm'),
+
+
+
 ]
