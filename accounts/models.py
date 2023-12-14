@@ -1,19 +1,41 @@
+from django import forms
 from django.db import models
-
-# Create your models here.
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 
+# Create your models here.
 class Person(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     full_name = models.CharField(max_length=50, null=True, blank=True)
     number = models.CharField(max_length=15, null=True, blank=True)
     is_owner = models.BooleanField(default=False)
+
+    def get_restock(self):
+        if not self.is_owner:
+            return None
+        raw_statements = LocationStatement.objects.filter(creator=self).order_by(
+            "-created_at"
+        )
+        statements = []
+        color_map = {
+            "Approved": "bg-success",
+            "Rejected": "bg-danger",
+            "Pending": "bg-info",
+        }
+        for each in raw_statements:
+            data = each.get_ST_Info()
+            data["status"] = color_map[data["status"]]
+            statements.append(data)
+        return statements
     
 
     def get_statement(self):
-        raw_statements = StoreStatement.objects.filter(creator=self).order_by('-created_at')
+        raw_statements = StoreStatement.objects.filter(creator=self).order_by(
+            "-created_at"
+        )
         statements = []
         color_map = {
             "Approved": "bg-success",
@@ -54,7 +76,7 @@ class Location(models.Model):
     person = models.OneToOneField(
         Person, on_delete=models.SET_NULL, null=True, blank=True
     )
-    
+
     def get_inevn_data(self):
         ivent = Inventory.objects.filter(location=self)
         lst = []
@@ -68,14 +90,32 @@ class Location(models.Model):
             }
             lst.append(data)
             total += data["totP"]
-            
-        return {'total_price': total, 'data':lst}
+
+        return {"total_price": total, "data": lst}
 
     def __str__(self):
         return self.name
-    
+
     def get_statement(self):
-        raw_statements = StoreStatement.objects.filter(warehouse=self).order_by('-created_at')
+        raw_statements = StoreStatement.objects.filter(warehouse=self).order_by(
+            "-created_at"
+        )
+        statements = []
+        color_map = {
+            "Approved": "bg-success",
+            "Rejected": "bg-danger",
+            "Pending": "bg-info",
+        }
+        for each in raw_statements:
+            data = each.get_ST_Info()
+            data["status"] = color_map[data["status"]]
+            statements.append(data)
+        return statements
+    
+    def get_restock(self):
+        raw_statements = LocationStatement.objects.filter(warehouse=self).order_by(
+            "-created_at"
+        )
         statements = []
         color_map = {
             "Approved": "bg-success",
@@ -101,11 +141,10 @@ class Inventory(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
-    
 
     def __str__(self):
         return f"{self.location} - {self.item} - {self.quantity}"
-    
+
     @property
     def price(self):
         return self.quantity * self.item.price
@@ -117,16 +156,35 @@ class Store(models.Model):
     phone = models.CharField(max_length=10, null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-    
 
     def __str__(self):
         return self.name
 
+class ItemQuantity(models.Model):
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        limit_choices_to={'model__in': ('storestatement', 'locationstatement')}
+    )
+    object_id = models.PositiveIntegerField()
+    statement = GenericForeignKey("content_type", "object_id")
+
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=0)
+
+
+    def __str__(self):
+        return f"{self.item} - Qty: {self.quantity}"
+
+    @property
+    def price(self):
+        return self.item.price * self.quantity
 
 class StoreStatement(models.Model):
     creator = models.ForeignKey(Person, on_delete=models.CASCADE)
     warehouse = models.ForeignKey(Location, on_delete=models.CASCADE)
     customer = models.ForeignKey(Store, on_delete=models.CASCADE)
+    tags = GenericRelation(ItemQuantity)
     status = models.CharField(
         max_length=20,
         choices=[
@@ -147,8 +205,47 @@ class StoreStatement(models.Model):
             "to": self.customer,
             "creator": self.creator,
             "status": self.status,
-            "itemList": self.itemquantity_set.all(),
-            "created_at": self.created_at,
+            "itemList": self.tags.all(),
+            "created_at": self.created_at.strftime('%d/%m/%Y'),
+            "id": self.id,
+        }
+
+        dataSt["price"] = self.price
+        return dataSt
+
+    @property
+    def price(self):
+        return sum(item_quantity.price for item_quantity in self.tags.all())
+
+
+            
+
+
+class LocationStatement(models.Model):
+    creator = models.ForeignKey(Person, on_delete=models.CASCADE)
+    warehouse = models.ForeignKey(Location, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("Pending", "Pending"),
+            ("Approved", "Approved"),
+            ("Rejected", "Rejected"),
+        ],
+        default="Pending",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    tags = GenericRelation(ItemQuantity)
+
+    def __str__(self):
+        return f"Statement #{self.warehouse} - {self.creator}"
+    
+    def get_ST_Info(self):
+        dataSt = {
+            "creator": self.creator,
+            "to": self.warehouse,
+            "status": self.status,
+            "itemList": self.tags.all(),
+            "created_at": self.created_at.strftime('%d/%m/%Y'),
             "id": self.id,
         }
         dataSt["price"] = self.price
@@ -156,17 +253,4 @@ class StoreStatement(models.Model):
     
     @property
     def price(self):
-        return sum(item_quantity.price for item_quantity in self.itemquantity_set.all())
-    
-
-class ItemQuantity(models.Model):
-    statement = models.ForeignKey(StoreStatement, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.item} - Qty: {self.quantity}"
-
-    @property
-    def price(self):
-        return self.item.price * self.quantity
+        return sum(item_quantity.price for item_quantity in self.tags.all())

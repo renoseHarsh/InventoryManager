@@ -1,0 +1,14 @@
+{% extends 'accounts/editBut.html' %}
+{% block btnName %}Post Order{% endblock %}
+{% block ida %}pstStoreStm{% endblock %}
+{% block idb %}pstStoreStm{% endblock %}
+
+{% block title %}Create Store Statement{% endblock %}
+{% block form_action %}{% url 'update_location' %}{% endblock %}
+
+{% block input_field %}
+        <input type="hidden" name="location_id" value="{{ location.id }}">
+        <input type="text" name="new_location_name" id="new_location_name" required placeholder="{{ location.name }}">
+{% endblock %}
+
+{% block btName %}Post Order{% endblock %}

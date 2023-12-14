@@ -23,6 +23,8 @@ def getInfo(user):
     inventory_data = user.person.inventory_for_assigned_location()
     location = user.person.get_assigned_location_name()
     statments = user.person.get_statement()
+    restock = user.person.get_restock()
+
 
     context = {
         "id": user.person.id,
@@ -31,6 +33,7 @@ def getInfo(user):
         "location": location,
         "inventory": inventory_data,
         "statements": statments,
+        "restock": restock,
         "username": user.username,
     }
     return context
@@ -67,6 +70,7 @@ def locationInfo(request, location_id):
     location = Location.objects.get(id=location_id)
     inventory_data = location.get_inevn_data()
     statments = location.get_statement()
+    restock = location.get_restock()
     unassigned_persons = Person.objects.filter(location__isnull = True)
     options = []
     if location.person:
@@ -81,7 +85,10 @@ def locationInfo(request, location_id):
                'inventory': inventory_data,
                'statements': statments,
                'unassigned': options,
-               'size': len(options)}
+               'restock': restock,
+               'size': len(options),
+               'isAssigned': request.user.person.location == location}
+    
     
     return render(request, 'accounts/locationInfo.html', context)
 
@@ -112,6 +119,9 @@ def loginPage(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            next_url = request.GET.get('next', None)
+            if next_url:
+                return redirect(next_url)
             return redirect("home")
         messages.info(request, "Incorrect username or password")
     context = {}
