@@ -263,3 +263,6 @@ def postStoreStatement(request):
             stm.delete()
 
     return redirect("locationInfo", location_id=location_id)
+
+def postLocationStatement(self):
+
