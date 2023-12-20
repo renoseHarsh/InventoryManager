@@ -258,11 +258,12 @@ def postStoreStatement(request):
                 item=each,
                 quantity=num,
             )
-        
+
         if flag:
             stm.delete()
 
     return redirect("locationInfo", location_id=location_id)
 
-def postLocationStatement(self):
 
+def postLocationStatement(self):
+    pass
