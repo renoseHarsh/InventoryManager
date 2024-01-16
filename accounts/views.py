@@ -75,6 +75,7 @@ def locationInfo(request, location_id):
     restock = location.get_restock()
     unassigned_persons = Person.objects.filter(location__isnull=True)
     stor = Store.objects.all()
+    isAssigned = request.user.person.get_assigned_location_name() == location
 
     options = []
     if location.person:
@@ -92,7 +93,7 @@ def locationInfo(request, location_id):
         "unassigned": options,
         "restock": restock,
         "size": len(options),
-        "isAssigned": request.user.person.location == location,
+        "isAssigned": isAssigned,
         "stores": stor,
     }
 
@@ -233,7 +234,7 @@ def postStoreStatement(request):
     if request.method == "POST":
         itemList = Item.objects.all()
         location_id = request.POST.get("location_id")
-        store_id = request.POST.get("store_name")
+        store_id = request.POST.get("store_select")
         try:
             store = Store.objects.get(id=store_id)
             loc = Location.objects.get(id=location_id)
@@ -246,20 +247,22 @@ def postStoreStatement(request):
         )
         flag = False
         for each in itemList:
-            num = request.POST.get(each.name)
-            if int(num) > loc.get_quntity_of_item(each):
+            num = int(request.POST.get("item-" + each.name))
+            print(num)
+            if num > loc.get_quntity_of_item(each):
                 flag = True
                 break
-            elif num == 0:
-                continue
-            li = ItemQuantity.objects.create(
-                content_type=ContentType.objects.get_for_model(StoreStatement),
-                object_id=stm.id,
-                item=each,
-                quantity=num,
-            )
+            elif num != 0:
+                print(num)
+                ItemQuantity.objects.create(
+                    content_type=ContentType.objects.get_for_model(StoreStatement),
+                    object_id=stm.id,
+                    item=each,
+                    quantity=num,
+                )
 
         if flag:
+            messages.error(request, "Not Enough Items")
             stm.delete()
 
     return redirect("locationInfo", location_id=location_id)

@@ -60,6 +60,7 @@ class Person(models.Model):
             return self.location
         else:
             return None
+        
 
     def inventory_for_assigned_location(self):
         if self.has_location():
@@ -89,6 +90,7 @@ class Location(models.Model):
             data = {
                 "name": each.item.name,
                 "quan": each.quantity,
+                "pend": each.pend,
                 "per": each.item.price,
                 "totP": each.price,
                 "range": range(1, each.quantity + 1)
@@ -146,6 +148,7 @@ class Inventory(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
+    pend = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.location} - {self.item} - {self.quantity}"

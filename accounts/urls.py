@@ -28,5 +28,4 @@ urlpatterns = [
     path('create_storeStm', postStoreStatement, name='create_storeStm'),
 
 
-
 ]
