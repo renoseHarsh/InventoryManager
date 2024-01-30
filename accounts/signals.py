@@ -22,3 +22,15 @@ def create_inventory_for_item(sender, instance, created, *args, **kwargs):
         locations = Location.objects.all()
         for location in locations:
             Inventory.objects.create(location=location, item=instance, quantity=0)
+
+@receiver(post_save, sender=ItemQuantity)
+def item_quantity_save(sender, instance, created, *args, **kwargs):
+    content_type = instance.content_type.model
+    object_id = instance.object_id
+    item = instance.item
+    quantity = instance.quantity
+    
+    if content_type=='storestatement':
+        inventory = StoreStatement.objects.get(id=object_id).warehouse.get_inventory(item)
+        inventory.pend -= quantity
+        inventory.save()

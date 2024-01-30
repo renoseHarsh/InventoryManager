@@ -77,7 +77,7 @@ def locationInfo(request, location_id):
     unassigned_persons = Person.objects.filter(location__isnull=True)
     stor = Store.objects.all()
     isAssigned = request.user.person.get_assigned_location_name() == location
-
+    
     options = []
     if location.person:
         options.append((location.person.id, location.person))
@@ -121,6 +121,7 @@ def registerPage(request):
             user.person.save()
         return redirect(reverse('userInfo', kwargs={'person_id': user.person.id}))
     context = {}
+    print("ya")
     return render(request, "accounts/register.html", context)
 
 
@@ -254,10 +255,12 @@ def postStoreStatement(request):
         flag = False
         for each in itemList:
             num = int(request.POST.get("item-" + each.name))
+            print(num)
             if num > loc.get_quntity_of_item(each):
                 flag = True
                 break
             elif num != 0:
+                print(num)
                 ItemQuantity.objects.create(
                     content_type=ContentType.objects.get_for_model(StoreStatement),
                     object_id=stm.id,

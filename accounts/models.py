@@ -135,6 +135,10 @@ class Location(models.Model):
             statements.append(data)
         return statements
 
+    def get_inventory(self, item):
+        return Inventory.objects.get(location = self, item = item)
+
+
 
 class Item(models.Model):
     name = models.CharField(max_length=50)
