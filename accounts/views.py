@@ -1,4 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
+from django.urls import reverse
 from .form import *
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
@@ -103,18 +104,23 @@ def locationInfo(request, location_id):
 @login_required(login_url="login")
 @owner_required
 def registerPage(request):
-    form = RegistrationForm()
     if request.method == "POST":
         if not request.user.person.is_owner:
             raise PermissionDenied("You are not allowed to make an user")
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            is_owner = request.POST.get("is_owner") == "on"
-            user.person.is_owner = is_owner
+        username = request.POST.get("username")
+        password1= request.POST.get("password1")
+        password2= request.POST.get("password2")
+        is_owner = request.POST.get("is_owner")
+        if password1 != password2:
+            messages.error(request, "Password does not match!!!")
+            return render(request, "accounts/newReg.html", {"used": username})
+        user = User.objects.create(username=username, password = password1)
+        user.save()
+        if is_owner:
+            user.person.is_owner = True
             user.person.save()
-            return HttpResponse("Nice Cock")
-    context = {"form": form}
+        return redirect(reverse('userInfo', kwargs={'person_id': user.person.id}))
+    context = {}
     return render(request, "accounts/register.html", context)
 
 
